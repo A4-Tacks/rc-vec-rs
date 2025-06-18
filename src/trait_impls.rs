@@ -361,7 +361,7 @@ impl<T, const N: usize> TryFrom<RcVec<T>> for Rc<[T; N]> {
 }
 
 #[cfg(feature = "std")]
-#[doc(cfg(feature = "std"))]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl std::io::Write for RcVec<u8> {
     #[inline]
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
