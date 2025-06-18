@@ -358,7 +358,7 @@ impl<T: Clone> RcVec<T> {
         let len = self.len();
 
         if new_len > len {
-            self.extend(iter::repeat(value).take(new_len-len));
+            self.extend(iter::repeat_n(value, new_len-len));
         } else {
             self.truncate(len);
         }
