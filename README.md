@@ -1,4 +1,4 @@
-`Rc` based `RcVec` and can be converted from Rc without allocation,
+`RcVec` based on `Rc` and can be converted from Rc without allocation,
 just like `Box` is converted to `Vec`
 
 Due to `Rc`'s API, this implementation cannot use `realloc`, resulting in some performance issues
