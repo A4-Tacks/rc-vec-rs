@@ -1,0 +1,36 @@
+[package]
+name = "rc-vec"
+version = "0.1.0"
+edition = "2021"
+
+authors = ["A4-Tacks <wdsjxhno1001@163.com>"]
+keywords = ["no_std", "vec", "vector", "rc", "arc"]
+categories = ["no-std", "data-structures", "rust-patterns"]
+description = "Rc based RcVec and can be converted from Rc without allocation"
+
+license = "MIT"
+repository = "https://github.com/A4-Tacks/rc-vec-rs"
+readme = "README.md"
+
+[package.metadata.docs.rs]
+all-features = true
+
+[workspace]
+members = ["rc-vec-proc_macro"]
+
+[features]
+std = []
+
+[dev-dependencies]
+criterion = "0.5.1"
+
+[dependencies]
+rc-vec-proc_macro = { version = "0.1.0", path = "rc-vec-proc_macro" }
+unique-rc = { path = "../unique-rc" }
+
+[[bench]]
+name = "basic"
+harness = false
+
+[profile.release]
+#debug = true
