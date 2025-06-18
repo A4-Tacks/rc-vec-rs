@@ -446,7 +446,9 @@ checksum = "5a5f39404a5da50712a4c1eecf25e90dd62b613502b7e925fd4e4d19b5c96512"
 
 [[package]]
 name = "unique-rc"
-version = "0.2.2"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f218751a01c13dcc4a16cc34595d5ab61175995a97129eb61c99c34ac25da23e"
 
 [[package]]
 name = "walkdir"

@@ -19,14 +19,14 @@ all-features = true
 members = ["rc-vec-proc_macro"]
 
 [features]
-std = []
+std = ["unique-rc/std"]
 
 [dev-dependencies]
 criterion = "0.5.1"
 
 [dependencies]
 rc-vec-proc_macro = { version = "0.1.0", path = "rc-vec-proc_macro" }
-unique-rc = { path = "../unique-rc" }
+unique-rc = "0.2.3"
 
 [[bench]]
 name = "basic"
