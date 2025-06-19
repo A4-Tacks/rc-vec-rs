@@ -1,5 +1,5 @@
 #[cfg(doc)]
-use alloc::vec::Vec;
+use alloc::{boxed::Box, vec::Vec};
 
 use alloc::{rc::Rc, sync::Arc};
 use core::{
@@ -17,6 +17,22 @@ use crate::{
     utils,
 };
 
+/// [`RcVec`] based on [`Rc`] and can be converted from Rc without allocation,
+/// just like [`Box`] is converted to [`Vec`]
+///
+/// # Examples
+///
+/// ```
+/// # use std::rc::Rc;
+/// use rc_vec::RcVec;
+///
+/// let rc: Rc<[i32]> = Rc::new([1, 2, 3]);
+/// let mut rc_vec = RcVec::from(rc);
+///
+/// assert_eq!(rc_vec, [1, 2, 3]);
+/// rc_vec.push(4);
+/// assert_eq!(rc_vec, [1, 2, 3, 4]);
+/// ```
 #[rc_impl_gen_arc_impl]
 pub struct RcVec<T> {
     raw: RcRawVec<T>,
@@ -80,30 +96,79 @@ impl<T> RcVec<T> {
         Self { raw: RcRawVec::new(), len: 0 }
     }
 
+    /// Create a new [`RcVec`] Initial capacity of `capacity`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use rc_vec::RcVec;
+    /// let vec = RcVec::with_capacity(176);
+    /// assert_eq!(vec.capacity(), 176);
+    /// assert_eq!(vec.len(), 0);
+    /// # assert_ne!(vec, [1]);
+    /// ```
     pub fn with_capacity(capacity: usize) -> Self {
         Self { raw: RcRawVec::with_capacity(capacity), len: 0 }
     }
 
+    /// Readonly permission pointer
     #[inline]
     pub fn as_ptr(&self) -> *const T {
         self.raw.as_ptr()
     }
 
+    /// Read and Write permission pointer
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use rc_vec::rc_vec;
+    /// let mut vec = rc_vec![1, 2, 3];
+    /// assert_eq!(vec, [1, 2, 3]);
+    /// unsafe { *vec.as_mut_ptr() += 1 }
+    /// assert_eq!(vec, [2, 2, 3]);
+    /// ```
     #[inline]
     pub fn as_mut_ptr(&mut self) -> *mut T {
         self.raw.as_mut_ptr()
     }
 
+    /// Get initialized datas count
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use rc_vec::RcVec;
+    /// let mut vec = RcVec::with_capacity(4);
+    /// assert_eq!(vec.capacity(), 4);
+    ///
+    /// vec.push(2333);
+    ///
+    /// assert_eq!(vec.len(), 1);
+    /// assert_eq!(vec.capacity(), 4);
+    /// ```
     #[inline]
     pub fn len(&self) -> usize {
         self.len
     }
 
+    /// Like `.len() == 0`
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
+    /// Get allocated capacity
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use rc_vec::RcVec;
+    /// let vec = RcVec::with_capacity(176);
+    /// assert_eq!(vec.capacity(), 176);
+    /// assert_eq!(vec.len(), 0);
+    /// # assert_ne!(vec, [1]);
+    /// ```
     #[inline]
     pub fn capacity(&self) -> usize {
         self.raw.capacity()
@@ -187,12 +252,28 @@ impl<T> RcVec<T> {
         }
     }
 
+    /// Reallocate to remove excess capacity
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use rc_vec::RcVec;
+    /// let mut vec = RcVec::with_capacity(16);
+    /// vec.push(233);
+    /// assert_eq!(vec.len(), 1);
+    /// assert_eq!(vec.capacity(), 16);
+    ///
+    /// vec.shrink_to_fit();
+    /// assert_eq!(vec.len(), 1);
+    /// assert_eq!(vec.capacity(), 1);
+    /// ```
     pub fn shrink_to_fit(&mut self) {
         if self.capacity() > self.len() {
             self.raw.shrink_to_fit(self.len());
         }
     }
 
+    /// Reallocate to max(`min_capacity`, `.len()`)
     pub fn shrink_to(&mut self, min_capacity: usize) {
         if self.capacity() > min_capacity {
             self.raw.shrink_to_fit(max(self.len(), min_capacity));
