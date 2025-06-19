@@ -92,6 +92,13 @@ impl From<UniqRc<str>> for RcVec<u8> {
 }
 
 #[rc_impl_gen_arc_impl]
+impl From<Rc<str>> for RcVec<u8> {
+    fn from(value: Rc<str>) -> Self {
+        UniqRc::new(value).into()
+    }
+}
+
+#[rc_impl_gen_arc_impl]
 impl<T, const N: usize> From<[T; N]> for RcVec<T> {
     fn from(value: [T; N]) -> Self {
         Self::from_iter(value)
