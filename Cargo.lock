@@ -330,10 +330,11 @@ dependencies = [
 
 [[package]]
 name = "rc-vec"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "criterion",
  "rc-vec-proc_macro",
+ "serde",
  "unique-rc",
 ]
 
@@ -449,6 +450,9 @@ name = "unique-rc"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f218751a01c13dcc4a16cc34595d5ab61175995a97129eb61c99c34ac25da23e"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "walkdir"

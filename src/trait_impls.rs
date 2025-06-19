@@ -367,6 +367,7 @@ impl<T, const N: usize> TryFrom<RcVec<T>> for Rc<[T; N]> {
     }
 }
 
+#[rc_impl_gen_arc_impl]
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl std::io::Write for RcVec<u8> {
@@ -395,5 +396,30 @@ impl std::io::Write for RcVec<u8> {
     #[inline]
     fn flush(&mut self) -> std::io::Result<()> {
         Ok(())
+    }
+}
+
+#[rc_impl_gen_arc_impl]
+#[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
+impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for RcVec<T> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de>,
+    {
+        let boxed: Box<[T]> = serde::Deserialize::deserialize(deserializer)?;
+        let rc = Rc::from(boxed);
+        let uniq: UniqRc<[T]> = UniqRc::try_new(rc).ok().unwrap();
+        Ok(uniq.into())
+    }
+}
+
+#[rc_impl_gen_arc_impl]
+#[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
+impl<T: serde::Serialize> serde::Serialize for RcVec<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer,
+    {
+        serializer.collect_seq(self)
     }
 }

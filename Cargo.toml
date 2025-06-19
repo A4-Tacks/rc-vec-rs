@@ -1,6 +1,6 @@
 [package]
 name = "rc-vec"
-version = "0.1.5"
+version = "0.1.6"
 edition = "2021"
 
 authors = ["A4-Tacks <wdsjxhno1001@163.com>"]
@@ -19,14 +19,16 @@ all-features = true
 members = ["rc-vec-proc_macro"]
 
 [features]
-std = ["unique-rc/std"]
+std = ["unique-rc/std", "serde?/std"]
+serde = ["dep:serde", "unique-rc/serde"]
 
 [dev-dependencies]
 criterion = "0.5.1"
 
 [dependencies]
-rc-vec-proc_macro = { version = "0.1.0", path = "rc-vec-proc_macro" }
 unique-rc = "0.2.3"
+rc-vec-proc_macro = { version = "0.1.0", path = "rc-vec-proc_macro" }
+serde = { version = "1.0.219", optional = true, features = ["alloc"], default-features = false }
 
 [[bench]]
 name = "basic"
