@@ -231,6 +231,54 @@ impl<T> RcVec<T> {
         }
     }
 
+    /// Like [`Vec::insert`]
+    ///
+    /// # Panics
+    ///
+    /// - `index > self.len()`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use rc_vec::rc_vec;
+    /// let mut vec = rc_vec![1, 2, 3];
+    /// vec.insert(1, 4);
+    /// assert_eq!(vec, [1, 4, 2, 3]);
+    /// vec.insert(4, 5);
+    /// assert_eq!(vec, [1, 4, 2, 3, 5]);
+    /// ```
+    #[track_caller]
+    pub fn insert(&mut self, index: usize, element: T) {
+        #[cold]
+        #[inline(never)]
+        #[track_caller]
+        fn assert_failed(index: usize, len: usize) -> ! {
+            panic!("insertion index (is {index}) should be <= len (is {len})");
+        }
+
+        let len = self.len();
+
+        if len == self.capacity() {
+            self.reserve(1);
+        }
+
+        unsafe {
+            let p = self.as_mut_ptr().add(index);
+
+            if index < len {
+                ptr::copy(p, p.add(1), len - index);
+            } else if index == len {
+                // no move
+            } else {
+                assert_failed(index, len);
+            }
+
+            ptr::write(p, element);
+
+            self.set_len(len + 1);
+        }
+    }
+
     #[inline]
     #[track_caller]
     pub fn swap_remove(&mut self, index: usize) -> T {
