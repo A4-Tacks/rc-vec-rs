@@ -96,6 +96,7 @@ impl<T> RcRawVec<T> {
 
     #[inline]
     pub fn reserve(&mut self, len: usize, additional: usize) {
+        #[cold]
         fn reserve_cold<T>(
             this: &mut RcRawVec<T>,
             len: usize,
