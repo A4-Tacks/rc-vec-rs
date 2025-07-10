@@ -14,6 +14,19 @@ impl Drop for Zst {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
+struct Atom(i8);
+
+impl Clone for Atom {
+    #[track_caller]
+    fn clone(&self) -> Self {
+        if self.0 == 0 {
+            panic!("Atom by zero")
+        }
+        Atom(self.0)
+    }
+}
+
 #[test]
 fn push() {
     let mut arr = RcVec::new();
@@ -39,6 +52,14 @@ fn clone() {
     let vec = rc_vec!["a".to_owned(), "b".to_owned()];
     let cloned = vec.clone();
     assert_eq!(vec, cloned);
+}
+
+#[test]
+#[should_panic = "Atom by zero"]
+fn clone_unwind() {
+    let vec = rc_vec![Atom(3), Atom(2), Atom(1), Atom(0), Atom(-1)];
+    let _cloned = vec.clone();
+    unreachable!();
 }
 
 #[test]
