@@ -558,10 +558,40 @@ impl<T> RcVec<T> {
         }
     }
 
+    /// Like [`Vec::append`]
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use rc_vec::{RcVec, rc_vec};
+    /// let mut vec = rc_vec![1, 2, 3];
+    /// let mut vec2 = rc_vec![4, 5, 6];
+    /// vec.append(&mut vec2);
+    /// assert_eq!(vec, [1, 2, 3, 4, 5, 6]);
+    /// assert_eq!(vec2, []);
+    /// ```
+    #[inline]
+    pub fn append(&mut self, other: &mut Self) {
+        let count = other.len();
+        let len = self.len();
+
+        unsafe {
+            self.reserve(count);
+
+            let dst = self.as_mut_ptr().add(len);
+            ptr::copy_nonoverlapping(other.as_ptr(), dst, count);
+
+            self.set_len(len+count);
+            other.set_len(0);
+        }
+    }
+
+    #[inline]
     pub fn iter(&self) -> slice::Iter<'_, T> {
         self.into_iter()
     }
 
+    #[inline]
     pub fn iter_mut(&mut self) -> slice::IterMut<'_, T> {
         self.into_iter()
     }

@@ -686,3 +686,19 @@ fn drain_unwind() {
     let mut iter = rcvec.drain(2..5);
     assert_eq!(iter.next(), Some(Boom(1)));
 }
+
+#[test]
+fn append() {
+    let mut vec = rc_vec!["a".to_owned(), "b".to_owned(), "c".to_owned()];
+    let mut vec2 = rc_vec!["d".to_owned(), "e".to_owned(), "f".to_owned()];
+    vec.append(&mut vec2);
+    assert_eq!(vec, [
+        "a".to_owned(),
+        "b".to_owned(),
+        "c".to_owned(),
+        "d".to_owned(),
+        "e".to_owned(),
+        "f".to_owned(),
+    ]);
+    assert_eq!(vec2, []);
+}
