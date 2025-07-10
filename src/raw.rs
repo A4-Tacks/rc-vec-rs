@@ -41,12 +41,19 @@ impl<T> RcRawVec<T> {
         Self { ptr: Some(raw) }
     }
 
+    #[inline]
     pub fn as_ptr(&self) -> *const T {
-        self.slice().as_ptr().cast()
+        if let Some(ptr) = self.ptr.as_ref() {
+            let rc = unsafe { UniqRc::get_rc_unchecked(ptr) };
+            Rc::as_ptr(rc).cast()
+        } else {
+            ptr::dangling()
+        }
     }
 
+    #[inline]
     pub fn as_mut_ptr(&mut self) -> *mut T {
-        self.slice_mut().as_mut_ptr().cast()
+        self.as_ptr().cast_mut()
     }
 
     pub fn slice(&self) -> &[MaybeUninit<T>] {

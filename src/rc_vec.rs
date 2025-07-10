@@ -647,6 +647,113 @@ impl<T> RcVec<T> {
     pub fn iter_mut(&mut self) -> slice::IterMut<'_, T> {
         self.into_iter()
     }
+
+    /// Like [`Vec::retain`]
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use rc_vec::{RcVec, rc_vec};
+    /// let mut vec = rc_vec![1, 2, 3, 4];
+    /// vec.retain(|&x| x % 2 == 0);
+    /// assert_eq!(vec, [2, 4]);
+    /// ```
+    ///
+    /// ```
+    /// # use rc_vec::{RcVec, rc_vec};
+    /// let mut vec = rc_vec![1, 2, 3, 4, 5];
+    /// let keep = [false, true, true, false, true];
+    /// let mut iter = keep.iter();
+    /// vec.retain(|_| *iter.next().unwrap());
+    /// assert_eq!(vec, [2, 3, 5]);
+    /// ```
+    pub fn retain<F>(&mut self, mut f: F)
+    where F: FnMut(&T) -> bool,
+    {
+        self.retain_mut(|elem| f(elem));
+    }
+
+    /// Like [`Vec::retain_mut`]
+    pub fn retain_mut<F>(&mut self, mut f: F)
+    where F: FnMut(&mut T) -> bool,
+    {
+        // This implement code from alloc::vec
+
+        let original_len = self.len();
+        unsafe { self.set_len(0) };
+
+        struct ShiftGuard<'a, T> {
+            v: &'a mut RcVec<T>,
+            processed_len: usize,
+            deleted_cnt: usize,
+            original_len: usize,
+        }
+
+        impl<T> Drop for ShiftGuard<'_, T> {
+            fn drop(&mut self) {
+                if self.deleted_cnt > 0 {
+                    // SAFETY: 尾随的未检查项必须有效，因为我们从不碰它们。
+                    unsafe {
+                        ptr::copy(
+                            self.v.as_ptr().add(self.processed_len),
+                            self.v.as_mut_ptr().add(self.processed_len - self.deleted_cnt),
+                            self.original_len - self.processed_len,
+                        );
+                    }
+                }
+                // SAFETY: 填充完 holes 后，所有项都存储在连续的内存中。
+                unsafe {
+                    self.v.set_len(self.original_len - self.deleted_cnt);
+                }
+            }
+        }
+
+        let mut g = ShiftGuard {
+            v: self,
+            processed_len: 0,
+            deleted_cnt: 0,
+            original_len,
+        };
+
+        fn process_loop<F, T, const DELETED: bool>(
+            original_len: usize,
+            f: &mut F,
+            g: &mut ShiftGuard<'_, T>,
+        )
+        where F: FnMut(&mut T) -> bool,
+        {
+            while g.processed_len != original_len {
+                // SAFETY: 未经检查的元素必须有效。
+                let cur = unsafe { &mut *g.v.as_mut_ptr().add(g.processed_len) };
+                if !f(cur) {
+                    // 如果 `drop_in_place` 发生 panic，请提前提早避免双重丢弃
+                    g.processed_len += 1;
+                    g.deleted_cnt += 1;
+                    // SAFETY: 丢弃后，我们再也不会触碰此元素。
+                    unsafe { ptr::drop_in_place(cur) };
+                    // 我们已经提前了 counter。
+                    if DELETED {
+                        continue;
+                    } else {
+                        break;
+                    }
+                }
+                if DELETED {
+                    // SAFETY: `deleted_cnt`> 0，因此 hole 插槽不得与当前元素重叠
+                    // 我们使用 copy 进行移动，从此再也不会触碰此元素。
+                    unsafe {
+                        let hole_slot = g.v.as_mut_ptr().add(g.processed_len - g.deleted_cnt);
+                        ptr::copy_nonoverlapping(cur, hole_slot, 1);
+                    }
+                }
+                g.processed_len += 1;
+            }
+        }
+
+        process_loop::<F, T, false>(original_len, &mut f, &mut g);
+        process_loop::<F, T, true>(original_len, &mut f, &mut g);
+        drop(g);
+    }
 }
 
 #[rc_impl_gen_arc_impl]

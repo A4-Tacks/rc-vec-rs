@@ -1,5 +1,10 @@
 #![allow(unused_imports)]
 
+extern crate std;
+
+use core::panic::AssertUnwindSafe;
+use std::panic::catch_unwind;
+
 use alloc::{borrow::ToOwned, boxed::Box, rc::Rc, string::String};
 
 use crate::rc_vec;
@@ -709,4 +714,56 @@ fn split_off() {
     let vec2 = vec.split_off(1);
     assert_eq!(vec, ["a".to_owned()]);
     assert_eq!(vec2, ["b".to_owned(), "c".to_owned()]);
+}
+
+#[test]
+fn retain() {
+    let mut rcvec = rc_vec!["a".to_owned(), "b".to_owned(), "c".to_owned()];
+    rcvec.retain(|s| s != "b");
+    assert_eq!(rcvec, rc_vec!["a".to_owned(), "c".to_owned()]);
+}
+
+#[test]
+fn retain_empty() {
+    let mut rcvec: RcVec<String> = rc_vec![];
+    rcvec.retain(|s| s != "b");
+    assert_eq!(rcvec, rc_vec![]);
+}
+
+#[test]
+fn retain_zst() {
+    let mut rcvec = rc_vec![Zst, Zst, Zst, Zst, Zst, Zst, Zst];
+    let mut i = -1;
+    rcvec.retain(|_| {
+        i += 1;
+        if (2..=4).contains(&i) {
+            return false;
+        }
+        true
+    });
+    assert_eq!(rcvec, rc_vec![Zst, Zst, Zst, Zst]);
+}
+
+#[test]
+#[should_panic = "Boom by zero"]
+fn retain_unwind() {
+    let mut rcvec = rc_vec![2, 1, 0, -1, -2];
+    rcvec.retain(|b| {
+        assert_ne!(*b, 0, "Boom by zero");
+        *b != 1
+    });
+    unreachable!()
+}
+
+#[test]
+fn retain_unwind_catch() {
+    let mut rcvec = rc_vec![2, 1, 0, -1, -2];
+    let ret = catch_unwind(AssertUnwindSafe(|| {
+        rcvec.retain(|b| {
+            assert_ne!(*b, 0, "Boom by zero");
+            *b != 1
+        });
+    }));
+    assert_eq!(ret.is_err(), true);
+    assert_eq!(rcvec, [2, 0, -1, -2]);
 }
