@@ -88,6 +88,23 @@ fn remove() {
 }
 
 #[test]
+fn insert() {
+    let mut arr = RcVec::new();
+
+    arr.insert(0, "a".to_owned());
+    arr.insert(0, "b".to_owned());
+    arr.insert(0, "c".to_owned());
+
+    assert_eq!(*arr, ["c".to_owned(), "b".to_owned(), "a".to_owned()]);
+
+    arr.insert(1, "d".to_owned());
+    assert_eq!(*arr, ["c".to_owned(), "d".to_owned(), "b".to_owned(), "a".to_owned()]);
+
+    arr.insert(4, "e".to_owned());
+    assert_eq!(*arr, ["c".to_owned(), "d".to_owned(), "b".to_owned(), "a".to_owned(), "e".to_owned()]);
+}
+
+#[test]
 fn remove1() {
     let mut arr = RcVec::new();
 
