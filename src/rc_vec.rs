@@ -6,7 +6,7 @@ use core::{
     cmp::max,
     iter,
     mem::MaybeUninit,
-    ops::{Deref, DerefMut, RangeBounds},
+    ops::{Deref, DerefMut, Range, RangeBounds},
     ptr, slice,
 };
 use rc_vec_proc_macro::rc_impl_gen_arc_impl;
@@ -17,7 +17,10 @@ use crate::{
     utils,
 };
 
+mod drain;
 mod trait_impls;
+
+pub use drain::*;
 
 /// [`RcVec`] based on [`Rc`] and can be converted from Rc without allocation,
 /// just like [`Box`] is converted to [`Vec`]
@@ -515,6 +518,44 @@ impl<T> RcVec<T> {
                 unsafe { slice::from_raw_parts_mut(raw.cast::<T>(), len) }
             })
             .unwrap_or_default()
+    }
+
+    /// Like [`Vec::drain`]
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use rc_vec::{RcVec, rc_vec};
+    /// let mut v = rc_vec![1, 2, 3];
+    /// let u: RcVec<_> = v.drain(1..).collect();
+    /// assert_eq!(v, &[1]);
+    /// assert_eq!(u, &[2, 3]);
+    ///
+    /// // Like `clear()`
+    /// v.drain(..);
+    /// assert_eq!(v, &[]);
+    /// ```
+    pub fn drain<R>(&mut self, range: R) -> RcVecDrain<'_, T>
+    where R: RangeBounds<usize>,
+    {
+        let len = self.len();
+        let Range { start, end } = utils::range(range, ..len);
+
+        unsafe {
+            self.set_len(start);
+
+            let slice = slice::from_raw_parts(
+                self.as_ptr().add(start),
+                end - start,
+            );
+
+            RcVecDrain {
+                tail_start: end,
+                tail_len: len - end,
+                iter: slice.iter(),
+                vec: self.into(),
+            }
+        }
     }
 
     pub fn iter(&self) -> slice::Iter<'_, T> {

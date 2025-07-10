@@ -14,6 +14,18 @@ impl Drop for Zst {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Clone)]
+struct Boom(i8);
+
+impl Drop for Boom {
+    #[track_caller]
+    fn drop(&mut self) {
+        if self.0 == 0 {
+            panic!("Boom by zero")
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
 struct Atom(i8);
 
@@ -615,4 +627,62 @@ fn deref_mut() {
     vec[0] = "c".to_owned();
     assert_eq!(vec[0], "c".to_owned());
     assert_eq!(vec, ["c".to_owned(), "b".to_owned()]);
+}
+
+#[test]
+fn drain() {
+    let mut rcvec = rc_vec!["a".to_owned(), "b".to_owned(), "c".to_owned()];
+    let mut iter = rcvec.drain(1..);
+    assert_eq!(iter.next(), Some("b".to_owned()));
+    assert_eq!(iter.next(), Some("c".to_owned()));
+    assert_eq!(iter.next(), None);
+    drop(iter);
+    assert_eq!(rcvec, rc_vec!["a".to_owned()]);
+}
+
+#[test]
+fn drain1() {
+    let mut rcvec = rc_vec!["a".to_owned(), "b".to_owned(), "c".to_owned()];
+    let mut iter = rcvec.drain(1..2);
+    assert_eq!(iter.next(), Some("b".to_owned()));
+    assert_eq!(iter.next(), None);
+    drop(iter);
+    assert_eq!(rcvec, rc_vec!["a".to_owned(), "c".to_owned()]);
+}
+
+#[test]
+fn drain2() {
+    let mut rcvec = rc_vec!["a".to_owned(), "b".to_owned(), "c".to_owned(), "d".to_owned()];
+    let mut iter = rcvec.drain(1..2);
+    assert_eq!(iter.next(), Some("b".to_owned()));
+    assert_eq!(iter.next(), None);
+    drop(iter);
+    assert_eq!(rcvec, rc_vec!["a".to_owned(), "c".to_owned(), "d".to_owned()]);
+}
+
+#[test]
+fn drain_zst() {
+    let mut rcvec = rc_vec![Zst, Zst, Zst];
+    let mut iter = rcvec.drain(1..);
+    assert_eq!(iter.next(), Some(Zst));
+    assert_eq!(iter.next(), Some(Zst));
+    assert_eq!(iter.next(), None);
+    drop(iter);
+    assert_eq!(rcvec, rc_vec![Zst]);
+}
+
+#[test]
+#[should_panic = "Boom by zero"]
+fn drain_unwind() {
+    let mut rcvec = rc_vec![
+        Boom(3),
+        Boom(2),
+        Boom(1),
+        Boom(0),
+        Boom(-1),
+        Boom(-2),
+        Boom(-3)
+    ];
+    let mut iter = rcvec.drain(2..5);
+    assert_eq!(iter.next(), Some(Boom(1)));
 }
