@@ -7,7 +7,6 @@ extern crate alloc;
 mod raw;
 mod is_zst;
 mod rc_vec;
-mod trait_impls;
 mod utils;
 
 pub use rc_vec::*;

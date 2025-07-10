@@ -17,6 +17,8 @@ use crate::{
     utils,
 };
 
+mod trait_impls;
+
 /// [`RcVec`] based on [`Rc`] and can be converted from Rc without allocation,
 /// just like [`Box`] is converted to [`Vec`]
 ///
