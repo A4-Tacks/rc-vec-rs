@@ -2,6 +2,8 @@
 
 use alloc::{borrow::ToOwned, boxed::Box, rc::Rc, string::String};
 
+use crate::rc_vec;
+
 use super::rc_vec::*;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -30,6 +32,13 @@ fn push() {
     assert!(arr.capacity() != 0);
 
     assert_eq!(*arr, ["a".to_owned(), "b".to_owned()]);
+}
+
+#[test]
+fn clone() {
+    let vec = rc_vec!["a".to_owned(), "b".to_owned()];
+    let cloned = vec.clone();
+    assert_eq!(vec, cloned);
 }
 
 #[test]

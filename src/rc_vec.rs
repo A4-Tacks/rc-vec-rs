@@ -67,6 +67,13 @@ impl<T> Drop for RcVec<T> {
 }
 
 #[rc_impl_gen_arc_impl]
+impl<T: Clone> Clone for RcVec<T> {
+    fn clone(&self) -> Self {
+        self.as_slice().into()
+    }
+}
+
+#[rc_impl_gen_arc_impl]
 impl<T> From<UniqRc<[T]>> for RcVec<T> {
     fn from(value: UniqRc<[T]>) -> Self {
         let len = value.len();

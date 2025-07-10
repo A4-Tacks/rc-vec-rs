@@ -330,7 +330,7 @@ dependencies = [
 
 [[package]]
 name = "rc-vec"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "criterion",
  "rc-vec-proc_macro",
