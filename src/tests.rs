@@ -702,3 +702,11 @@ fn append() {
     ]);
     assert_eq!(vec2, []);
 }
+
+#[test]
+fn split_off() {
+    let mut vec = rc_vec!["a".to_owned(), "b".to_owned(), "c".to_owned()];
+    let vec2 = vec.split_off(1);
+    assert_eq!(vec, ["a".to_owned()]);
+    assert_eq!(vec2, ["b".to_owned(), "c".to_owned()]);
+}

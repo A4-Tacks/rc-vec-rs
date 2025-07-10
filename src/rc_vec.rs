@@ -586,6 +586,45 @@ impl<T> RcVec<T> {
         }
     }
 
+    /// Like [`Vec::split_off`]
+    ///
+    /// # Panics
+    /// - `at > len`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use rc_vec::{RcVec, rc_vec};
+    /// let mut vec = rc_vec![1, 2, 3];
+    /// let vec2 = vec.split_off(1);
+    /// assert_eq!(vec, [1]);
+    /// assert_eq!(vec2, [2, 3]);
+    /// ```
+    pub fn split_off(&mut self, at: usize) -> Self {
+        #[cold]
+        #[inline(never)]
+        fn assert_failed(at: usize, len: usize) -> ! {
+            panic!("`at` split index (is {at}) should be <= len (is {len})");
+        }
+
+        if at > self.len() {
+            assert_failed(at, self.len());
+        }
+
+        let remainder_len = self.len() - at;
+        let mut other = Self::with_capacity(remainder_len);
+
+        unsafe {
+            self.set_len(at);
+            other.set_len(remainder_len);
+
+            self.as_ptr().add(at)
+                .copy_to(other.as_mut_ptr(), other.len());
+        }
+
+        other
+    }
+
     #[inline]
     pub fn iter(&self) -> slice::Iter<'_, T> {
         self.into_iter()
