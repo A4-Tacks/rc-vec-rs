@@ -256,6 +256,19 @@ impl<T> RcVec<T> {
     }
 
     #[inline]
+    pub fn pop_if<P>(&mut self, predicate: P) -> Option<T>
+    where P: FnOnce(&mut T) -> bool
+    {
+        let last = self.last_mut()?;
+
+        if predicate(last) {
+            self.pop()
+        } else {
+            None
+        }
+    }
+
+    #[inline]
     #[track_caller]
     pub fn remove(&mut self, index: usize) -> T {
         fn assert_failed(index: usize, len: usize) -> ! {
