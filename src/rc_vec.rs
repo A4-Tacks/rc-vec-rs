@@ -135,6 +135,42 @@ impl<T> RcVec<T> {
         self.raw.as_mut_ptr()
     }
 
+    /// Extracts a slice containing the entire vector.
+    ///
+    /// Equivalent to `&s[..].`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use rc_vec::rc_vec;
+    /// let vec = rc_vec![1, 2, 3];
+    /// let slice: &[i32] = vec.as_slice();
+    /// assert_eq!(slice, [1, 2, 3]);
+    /// ```
+    #[inline]
+    pub fn as_slice(&self) -> &[T] {
+        self
+    }
+
+    /// Extracts a mutable slice of the entire vector.
+    ///
+    /// Equivalent to `&mut s[..].`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use rc_vec::rc_vec;
+    /// let mut vec = rc_vec![1, 2, 3];
+    /// let slice: &mut [i32] = vec.as_mut_slice();
+    /// assert_eq!(slice, [1, 2, 3]);
+    /// slice[1] += 2;
+    /// assert_eq!(slice, [1, 4, 3]);
+    /// ```
+    #[inline]
+    pub fn as_mut_slice(&mut self) -> &mut [T] {
+        self
+    }
+
     /// Get initialized datas count
     ///
     /// # Examples
