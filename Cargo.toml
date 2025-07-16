@@ -29,6 +29,7 @@ criterion = "0.5.1"
 unique-rc = "0.2.3"
 rc-vec-proc_macro = { version = "0.1.0", path = "rc-vec-proc_macro" }
 serde = { version = "1.0.219", optional = true, features = ["alloc"], default-features = false }
+web-sys = "0.3.66"
 
 [[bench]]
 name = "basic"
